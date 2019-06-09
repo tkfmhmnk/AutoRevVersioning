@@ -1,0 +1,5 @@
+commit c1c463fdd029065ec759a0d43fefb1e2e7da3e8b
+Author: LGgram <LGgram@LG>
+Date:   Sat Jun 8 12:27:19 2019 +0900
+
+    ソリューションとプロジェクトを作成
