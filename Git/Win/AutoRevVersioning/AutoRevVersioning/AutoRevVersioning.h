@@ -80,10 +80,10 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 	UnicodeFileIO::Endian endian;
 
 	static constexpr CharT lf = MultiTypeChar::LF<CharT>();
-	static constexpr const CharT* keyFILE = MultiTypeChar::GetsearchKeyword<CharT>(0);
-	static constexpr const CharT* keyPROD = MultiTypeChar::GetsearchKeyword<CharT>(1);
-	static constexpr const CharT* keyVFILE = MultiTypeChar::GetsearchKeyword<CharT>(2);
-	static constexpr const CharT* keyVPROD = MultiTypeChar::GetsearchKeyword<CharT>(3);
+	static constexpr const CharT* keyFILE = MultiTypeChar::searchKeyword<CharT>(0);
+	static constexpr const CharT* keyPROD = MultiTypeChar::searchKeyword<CharT>(1);
+	static constexpr const CharT* keyVFILE = MultiTypeChar::searchKeyword<CharT>(2);
+	static constexpr const CharT* keyVPROD = MultiTypeChar::searchKeyword<CharT>(3);
 
 	rRet = UnicodeFileIO::ReadString(rcFile, rcStream, endian);
 
@@ -133,7 +133,7 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 
 template<class CharT> ErrCode ProcFILEVERSION(std::basic_string<CharT>& line, Version<CharT>& ver) {
 	size_t posHead, posComma_major, posComma_minor, posComma_build;
-	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(0));
+	std::basic_string<CharT> key(MultiTypeChar::searchKeyword<CharT>(0));
 	static constexpr CharT comma = MultiTypeChar::Comma<CharT>();
 	std::basic_string<CharT> oldRev;
 
@@ -160,7 +160,7 @@ template<class CharT> ErrCode ProcFILEVERSION(std::basic_string<CharT>& line, Ve
 
 template<class CharT> ErrCode ProcPRODUCTVERSION(std::basic_string<CharT>& line, Version<CharT>& ver) {
 	size_t posHead, posComma_major, posComma_minor, posComma_build;
-	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(1));
+	std::basic_string<CharT> key(MultiTypeChar::searchKeyword<CharT>(1));
 	static constexpr CharT comma = MultiTypeChar::Comma<CharT>();
 	std::basic_string<CharT> oldRev;
 
@@ -187,7 +187,7 @@ template<class CharT> ErrCode ProcPRODUCTVERSION(std::basic_string<CharT>& line,
 
 template<class CharT> ErrCode ProcVFILEVERSION(std::basic_string<CharT>& line, const Version<CharT>& ver) {
 	size_t posHead;
-	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(2));
+	std::basic_string<CharT> key(MultiTypeChar::searchKeyword<CharT>(2));
 	static constexpr CharT comma = MultiTypeChar::Comma<CharT>();
 	static constexpr CharT dot = MultiTypeChar::Dot<CharT>();
 	static constexpr CharT dquo = MultiTypeChar::DQuo<CharT>();
@@ -202,7 +202,7 @@ template<class CharT> ErrCode ProcVFILEVERSION(std::basic_string<CharT>& line, c
 
 template<class CharT> ErrCode ProcVPRODUCTVERSION(std::basic_string<CharT>& line, const Version<CharT>& ver) {
 	size_t posHead;
-	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(3));
+	std::basic_string<CharT> key(MultiTypeChar::searchKeyword<CharT>(3));
 	static constexpr CharT comma = MultiTypeChar::Comma<CharT>();
 	static constexpr CharT dot = MultiTypeChar::Dot<CharT>();
 	static constexpr CharT dquo = MultiTypeChar::DQuo<CharT>();
