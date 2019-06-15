@@ -19,9 +19,7 @@ limitations under the License.
 #define _AUTO_REV_VERSIONING_H
 #include<iostream>
 #include<fstream>
-#include<locale>
 #include<string>
-#include <codecvt>
 #include"DeleteSpace.h"
 #include"UnicodeFileIO.h"
 #include"MultiTypeChar.h"
