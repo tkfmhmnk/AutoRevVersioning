@@ -163,7 +163,7 @@ int main(int argc, char *argv[], char *envp[]){
 		break;
 
 	case 932:
-		//todo
+		replaseRet = ReplaceRcVersion<char>(rev, argv[2]);
 		break;
 
 	default:

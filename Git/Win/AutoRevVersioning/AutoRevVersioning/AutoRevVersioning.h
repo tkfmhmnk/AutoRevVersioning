@@ -64,8 +64,8 @@ public:
 };
 
 template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile) {
-	std::basic_stringstream<CharT> tempRcStream;
-	std::basic_stringstream<CharT> rcStream;
+	UnicodeFileIO::Manager<std::basic_istream<CharT>> rcStreamManager;
+	UnicodeFileIO::Manager<std::basic_ostream<CharT>> tempRcStreamManager;
 	std::basic_string<CharT> line;
 	std::basic_string<CharT> temp;
 	size_t pos_FILEVERSION;
@@ -77,7 +77,6 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 
 	UnicodeFileIO::Ret rRet;
 	UnicodeFileIO::Ret wRet;
-	UnicodeFileIO::Endian endian;
 
 	static constexpr CharT lf = MultiTypeChar::LF<CharT>();
 	static constexpr const CharT* keyFILE = MultiTypeChar::searchKeyword<CharT>(0);
@@ -85,49 +84,60 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 	static constexpr const CharT* keyVFILE = MultiTypeChar::searchKeyword<CharT>(2);
 	static constexpr const CharT* keyVPROD = MultiTypeChar::searchKeyword<CharT>(3);
 
-	rRet = UnicodeFileIO::ReadString(rcFile, rcStream, endian);
-
+	rRet = rcStreamManager.OpenStream(rcFile);
 	if (rRet != UnicodeFileIO::Ret::OK) {
 		std::cout << "Failed to read " << rcFile << std::endl;
 		return ErrCode::FailedOpenRcFile;
 	}
 
-	fileVer.revision = UnicodeConvert::ToString<CharT>(rev);
-	prodVer.revision = fileVer.revision;
-
-	while (rcStream.good()) {
-		getline(rcStream, line);
-		temp = line;
-		DeleteSpace<CharT>(temp);
-		if ((pos_FILEVERSION = temp.find(keyFILE)) == 0) {
-			ret = ProcFILEVERSION(line, fileVer);
-			if (ret != ErrCode::OK) return ret;
-		}
-		else if ((pos_FILEVERSION = temp.find(keyPROD)) == 0) {
-			ret = ProcPRODUCTVERSION(line, prodVer);
-			if (ret != ErrCode::OK) return ret;
-
-		}
-		else if ((pos_FILEVERSION = temp.find(keyVFILE)) == 0) {
-			ret = ProcVFILEVERSION(line, fileVer);
-			if (ret != ErrCode::OK) return ret;
-		}
-		else if ((pos_FILEVERSION = temp.find(keyVPROD)) == 0) {
-			ret = ProcVPRODUCTVERSION(line, prodVer);
-			if (ret != ErrCode::OK) return ret;
-		}
-		tempRcStream << line << lf;
-	}
-
 	std::string outputFileName = rcFile;
 	outputFileName += ".temp";
-	wRet = UnicodeFileIO::WriteString(outputFileName.c_str(), tempRcStream, endian);
-
+	wRet = tempRcStreamManager.OpenStream(outputFileName.c_str(), rcStreamManager.endian);
 	if (wRet != UnicodeFileIO::Ret::OK) {
 		std::cout << "Failed to write " << outputFileName << std::endl;
+		rcStreamManager.CloseStream();
 		return ErrCode::FailedOpenTempRcFile;
 	}
 
+	try {
+		fileVer.revision = UnicodeConvert::ToString<CharT>(rev);
+		prodVer.revision = fileVer.revision;
+
+		std::basic_istream<CharT>& rcStream = *(rcStreamManager.pStream);
+		std::basic_ostream<CharT>& tempRcStream = *(tempRcStreamManager.pStream);
+
+		while (rcStream.good()) {
+			getline(rcStream, line);
+			temp = line;
+			DeleteSpace<CharT>(temp);
+			if ((pos_FILEVERSION = temp.find(keyFILE)) == 0) {
+				ret = ProcFILEVERSION(line, fileVer);
+				if (ret != ErrCode::OK) throw ret;
+			}
+			else if ((pos_FILEVERSION = temp.find(keyPROD)) == 0) {
+				ret = ProcPRODUCTVERSION(line, prodVer);
+				if (ret != ErrCode::OK) throw ret;
+
+			}
+			else if ((pos_FILEVERSION = temp.find(keyVFILE)) == 0) {
+				ret = ProcVFILEVERSION(line, fileVer);
+				if (ret != ErrCode::OK) throw ret;
+			}
+			else if ((pos_FILEVERSION = temp.find(keyVPROD)) == 0) {
+				ret = ProcVPRODUCTVERSION(line, prodVer);
+				if (ret != ErrCode::OK) throw ret;
+			}
+			tempRcStream << line << lf;
+		}
+	}
+	catch (const ErrCode& e) {
+		rcStreamManager.CloseStream();
+		tempRcStreamManager.CloseStream();
+		return e;
+	}
+
+	rcStreamManager.CloseStream();
+	tempRcStreamManager.CloseStream();
 	return ErrCode::OK;
 }
 
