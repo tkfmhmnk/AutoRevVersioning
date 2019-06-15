@@ -25,14 +25,13 @@ namespace UnicodeConvert {
 
 
 		static constexpr int bufSize = 16;
-		static constexpr CharT Zero = MultiTypeChar::GetZero<CharT>();
-		static constexpr CharT UA = MultiTypeChar::GetUA<CharT>();
+		static constexpr CharT Zero = MultiTypeChar::Zero<CharT>();
+		static constexpr CharT UA = MultiTypeChar::UA<CharT>();
 
 		CharT buf[bufSize];
 
 		int count=0;
 		int next;
-		int temp;
 		std::basic_string<CharT> tempStr;
 		tempStr.reserve(16 - 1);
 
@@ -46,7 +45,7 @@ namespace UnicodeConvert {
 				} while (next != 0);
 			}
 			else {
-				tempStr.push_back(MultiTypeChar::GetMinus<CharT>());
+				tempStr.push_back(MultiTypeChar::Minus<CharT>());
 				do {
 					next = src / base;
 					buf[count++] = Zero + (CharT)(next * base - src);

@@ -20,19 +20,19 @@ limitations under the License.
 /**
 	Š–]‚ÌŒ^‚Å“Á’è‚Ì•¶š‚ğæ“¾‚Å‚«‚éŠÖ”‚Ì’è‹`‚ğ“WŠJ‚·‚é
 */
-#define MULTITYPE_CHAR(name,val)namespace MultiTypeChar{ template<class CharT> constexpr CharT Get##name() {\
+#define MULTITYPE_CHAR(name,val)namespace MultiTypeChar{ template<class CharT> constexpr CharT name() {\
 		return val;\
 	};\
-	template<> constexpr char Get##name<char>(){\
+	template<> constexpr char name<char>(){\
 		return val;\
 	};\
-	template<> constexpr wchar_t Get##name<wchar_t>(){\
+	template<> constexpr wchar_t name<wchar_t>(){\
 		return L##val;\
 	};\
-	template<> constexpr char16_t Get##name<char16_t>(){\
+	template<> constexpr char16_t name<char16_t>(){\
 		return u##val;\
 	};\
-	template<> constexpr char32_t Get##name<char32_t>(){\
+	template<> constexpr char32_t name<char32_t>(){\
 		return U##val;\
 	};\
 }

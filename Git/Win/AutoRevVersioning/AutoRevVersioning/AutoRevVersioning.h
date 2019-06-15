@@ -79,7 +79,7 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 	UnicodeFileIO::Ret wRet;
 	UnicodeFileIO::Endian endian;
 
-	static constexpr CharT lf = MultiTypeChar::GetLF<CharT>();
+	static constexpr CharT lf = MultiTypeChar::LF<CharT>();
 	static constexpr const CharT* keyFILE = MultiTypeChar::GetsearchKeyword<CharT>(0);
 	static constexpr const CharT* keyPROD = MultiTypeChar::GetsearchKeyword<CharT>(1);
 	static constexpr const CharT* keyVFILE = MultiTypeChar::GetsearchKeyword<CharT>(2);
@@ -134,7 +134,7 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 template<class CharT> ErrCode ProcFILEVERSION(std::basic_string<CharT>& line, Version<CharT>& ver) {
 	size_t posHead, posComma_major, posComma_minor, posComma_build;
 	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(0));
-	static constexpr CharT comma = MultiTypeChar::GetComma<CharT>();
+	static constexpr CharT comma = MultiTypeChar::Comma<CharT>();
 	std::basic_string<CharT> oldRev;
 
 	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
@@ -153,7 +153,7 @@ template<class CharT> ErrCode ProcFILEVERSION(std::basic_string<CharT>& line, Ve
 	if (oldRev == ver.revision) return ErrCode::SameRevision;
 
 	line.erase(posHead + key.length());
-	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + MultiTypeChar::GetCR<CharT>();
+	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + MultiTypeChar::CR<CharT>();
 
 	return ErrCode::OK;
 }
@@ -161,7 +161,7 @@ template<class CharT> ErrCode ProcFILEVERSION(std::basic_string<CharT>& line, Ve
 template<class CharT> ErrCode ProcPRODUCTVERSION(std::basic_string<CharT>& line, Version<CharT>& ver) {
 	size_t posHead, posComma_major, posComma_minor, posComma_build;
 	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(1));
-	static constexpr CharT comma = MultiTypeChar::GetComma<CharT>();
+	static constexpr CharT comma = MultiTypeChar::Comma<CharT>();
 	std::basic_string<CharT> oldRev;
 
 	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
@@ -180,7 +180,7 @@ template<class CharT> ErrCode ProcPRODUCTVERSION(std::basic_string<CharT>& line,
 	if (oldRev == ver.revision) return ErrCode::SameRevision;
 
 	line.erase(posHead + key.length());
-	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + MultiTypeChar::GetCR<CharT>();
+	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + MultiTypeChar::CR<CharT>();
 
 	return ErrCode::OK;
 }
@@ -188,14 +188,14 @@ template<class CharT> ErrCode ProcPRODUCTVERSION(std::basic_string<CharT>& line,
 template<class CharT> ErrCode ProcVFILEVERSION(std::basic_string<CharT>& line, const Version<CharT>& ver) {
 	size_t posHead;
 	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(2));
-	static constexpr CharT comma = MultiTypeChar::GetComma<CharT>();
-	static constexpr CharT dot = MultiTypeChar::GetDot<CharT>();
-	static constexpr CharT dquo = MultiTypeChar::GetDQuo<CharT>();
+	static constexpr CharT comma = MultiTypeChar::Comma<CharT>();
+	static constexpr CharT dot = MultiTypeChar::Dot<CharT>();
+	static constexpr CharT dquo = MultiTypeChar::DQuo<CharT>();
 
 	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
 
 	line.erase(posHead + key.length());
-	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo + MultiTypeChar::GetCR<CharT>();
+	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo + MultiTypeChar::CR<CharT>();
 
 	return ErrCode::OK;
 }
@@ -203,14 +203,14 @@ template<class CharT> ErrCode ProcVFILEVERSION(std::basic_string<CharT>& line, c
 template<class CharT> ErrCode ProcVPRODUCTVERSION(std::basic_string<CharT>& line, const Version<CharT>& ver) {
 	size_t posHead;
 	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(3));
-	static constexpr CharT comma = MultiTypeChar::GetComma<CharT>();
-	static constexpr CharT dot = MultiTypeChar::GetDot<CharT>();
-	static constexpr CharT dquo = MultiTypeChar::GetDQuo<CharT>();
+	static constexpr CharT comma = MultiTypeChar::Comma<CharT>();
+	static constexpr CharT dot = MultiTypeChar::Dot<CharT>();
+	static constexpr CharT dquo = MultiTypeChar::DQuo<CharT>();
 
 	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
 
 	line.erase(posHead + key.length());
-	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo + MultiTypeChar::GetCR<CharT>();
+	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo + MultiTypeChar::CR<CharT>();
 
 	return ErrCode::OK;
 }
