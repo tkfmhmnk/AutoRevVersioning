@@ -1,5 +1,6 @@
-commit c1c463fdd029065ec759a0d43fefb1e2e7da3e8b
+commit 6521fa96cd607a340e6598cd0ee0bbe142ec1813
 Author: LGgram <LGgram@LG>
-Date:   Sat Jun 8 12:27:19 2019 +0900
+Date:   Sun Jun 9 22:45:29 2019 +0900
 
-    ソリューションとプロジェクトを作成
+    初期プログラムを追加
+    Unicodeを中心としてうまく動作しない

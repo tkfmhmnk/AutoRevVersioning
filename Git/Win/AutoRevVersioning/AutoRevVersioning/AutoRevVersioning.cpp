@@ -25,6 +25,19 @@ using namespace std;
 
 static const char* gitRevFile = "AutoRevVersioning_gitrev";
 
+ErrCode UpdateRcFile(const char* rcfile) {
+	string cmd;
+	int cmd_ret;
+	cmd = "move /Y " + string(rcfile) + ".temp " + string(rcfile);
+	cmd_ret = system(cmd.c_str());
+
+	if (cmd_ret != 0) {
+		cout << "ErrorCode=" << cmd_ret << " : cmd=" << cmd << endl;
+		return ErrCode::FailedUpdateRcFile;
+	}
+	return ErrCode::OK;
+}
+
 int main(int argc, char *argv[], char *envp[]){
 	if (argc != 4) {
 		cout << "Usage: AutoRevVersioning.exe <projectdir> <rcfilepath> <code page>" << endl;
@@ -38,6 +51,8 @@ int main(int argc, char *argv[], char *envp[]){
 	int codePage;
 	string codePageStr(argv[3]);
 	int cmd_ret;
+	ErrCode replaseRet;
+	ErrCode updateRet;
 
 	cmd = "git log -1 " + projectdir + " 1>" + gitRevFile;
 	try {
@@ -107,21 +122,6 @@ int main(int argc, char *argv[], char *envp[]){
 			cout << "Invalid sha1. sha1=" << sha1 << endl;
 			throw ErrCode::OutRangeSHA1;
 		}
-
-		switch (codePage) {
-		case 1200:
-			ReplaceRcVersion<wchar_t>(rev, argv[2]);
-			break;
-
-		case 932:
-			ReplaceRcVersion<char>(rev, argv[2]);
-			break;
-
-		default:
-			throw ErrCode::UnknownCodePage;
-			break;
-		}
-
 	}
 	catch (const ErrCode& e) {
 		gitRevStream.close();
@@ -131,11 +131,29 @@ int main(int argc, char *argv[], char *envp[]){
 		gitRevStream.close();
 		return (int)ErrCode::Unknown;
 	}
-
-
-
-
 	gitRevStream.close();
+
+
+	switch (codePage) {
+	case 1200:
+		replaseRet = ReplaceRcVersion<char16_t>(rev, argv[2]);
+		if (replaseRet != ErrCode::OK) return (int)replaseRet;
+		break;
+
+	case 932:
+		//todo
+		break;
+
+	default:
+		return (int)ErrCode::UnknownCodePage;
+		break;
+	}
+
+	updateRet = UpdateRcFile(argv[2]);
+	if (updateRet != ErrCode::OK) return (int)updateRet;
+
+	cout << "リビジョン自動更新" << endl;
+
 	return 0;
 }
 

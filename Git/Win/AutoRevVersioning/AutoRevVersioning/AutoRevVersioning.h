@@ -23,64 +23,9 @@ limitations under the License.
 #include<string>
 #include <codecvt>
 #include"DeleteSpace.h"
-
-/**
-	èäñ]ÇÃå^Ç≈ì¡íËÇÃï∂éöÇéÊìæÇ≈Ç´ÇÈä÷êîÇÃíËã`ÇìWäJÇ∑ÇÈ
-*/
-#define MULTITYPE_CHAR(name,val) template<class CharT> constexpr CharT Get##name() {\
-		return val;\
-	};\
-	template<> constexpr char Get##name<char>(){\
-		return val;\
-	};\
-	template<> constexpr wchar_t Get##name<wchar_t>(){\
-		return L##val;\
-	};\
-	template<> constexpr char16_t Get##name<char16_t>(){\
-		return u##val;\
-	};\
-	template<> constexpr char32_t Get##name<char32_t>(){\
-		return U##val;\
-	}
-
-MULTITYPE_CHAR(Comma, ',');
-
-/**
-	ï°êîÇÃï∂éöóÒå^ÇÇ‹Ç∆ÇﬂÇΩç\ë¢ëÃÅB_CSVSTREAM_MULTITYPE_STRÇ∆ëgÇ›çáÇÌÇπÇƒégÇ§Ç±Ç∆ÇëzíË
-*/
-class MultiTypeCString {
-public:
-	constexpr MultiTypeCString(const char* pc, const wchar_t* pL, const char16_t* pu, const char32_t* pU):
-	c(pc) , L(pL) , u(pu) , U(pU){
-	};
-	const char* c;
-	const wchar_t* L;
-	const char16_t* u;
-	const char32_t* U;
-};
-
-/**
-	ï∂éöóÒÇï°êîÇÃï∂éöóÒÉäÉeÉâÉãÇ…ÇµÇƒìWäJÇ∑ÇÈ
-*/
-#define _MULTITYPE_STR(arg) {arg , L##arg , u##arg , U##arg} 
-
-#define MULTITYPE_CSTR(name, ...) constexpr MultiTypeCString name[] = {__VA_ARGS__};\
-constexpr std::size_t name##Size = sizeof(name)/sizeof(MultiTypeCString);\
-template<class CharT> constexpr const CharT* Get##name(const int index) {\
-	return (name+index)->c;\
-};\
-template<> constexpr const char* Get##name<char>(const int index) {\
-	return (name+index)->c;\
-};\
-template<> constexpr const wchar_t* Get##name<wchar_t>(const int index) {\
-	return (name+index)->L;\
-};\
-template<> constexpr const char16_t* Get##name<char16_t>(const int index) {\
-	return (name+index)->u;\
-};\
-template<> constexpr const char32_t* Get##name<char32_t>(const int index) {\
-	return (name+index)->U;\
-}
+#include"UnicodeFileIO.h"
+#include"MultiTypeChar.h"
+#include"UnicodeConvert.h"
 
 MULTITYPE_CSTR(
 	searchKeyword,
@@ -89,10 +34,6 @@ MULTITYPE_CSTR(
 	_MULTITYPE_STR("VALUE \"FileVersion\""),
 	_MULTITYPE_STR("VALUE \"ProductVersion\"")
 );
-
-constexpr const char* tfunc() {
-	return "aa";
-}
 
 enum class ErrCode :int {
 	OK = 0,
@@ -108,6 +49,7 @@ enum class ErrCode :int {
 	FailedGetMajorVer,
 	FailedGetMinorVer,
 	FailedGetBuildVer,
+	FailedUpdateRcFile,
 	Unknown,
 };
 
@@ -120,69 +62,146 @@ public:
 };
 
 template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile) {
-	std::basic_ofstream<CharT> tempRcStream((std::string(rcFile) + ".temp").c_str());
-	std::basic_ifstream<CharT> rcStream(rcFile);
+	std::basic_stringstream<CharT> tempRcStream;
+	std::basic_stringstream<CharT> rcStream;
 	std::basic_string<CharT> line;
 	std::basic_string<CharT> temp;
 	size_t pos_FILEVERSION;
 
 	ErrCode ret;
 
-	Version<CharT> ver;
+	Version<CharT> fileVer;
+	Version<CharT> prodVer;
 
-	if (!tempRcStream.is_open()) {
-		std::cout << "Failed to open " << rcFile << ".temp" << std::endl;
-		return ErrCode::FailedOpenTempRcFile;
-	}
-	if (!rcStream.is_open()) {
-		std::cout << "Failed to open " << rcFile << std::endl;
+	UnicodeFileIO::Ret rRet;
+	UnicodeFileIO::Ret wRet;
+	UnicodeFileIO::Endian endian;
+
+	static constexpr CharT lf = MultiTypeChar::GetLF<CharT>();
+	static constexpr const CharT* keyFILE = MultiTypeChar::GetsearchKeyword<CharT>(0);
+	static constexpr const CharT* keyPROD = MultiTypeChar::GetsearchKeyword<CharT>(1);
+	static constexpr const CharT* keyVFILE = MultiTypeChar::GetsearchKeyword<CharT>(2);
+	static constexpr const CharT* keyVPROD = MultiTypeChar::GetsearchKeyword<CharT>(3);
+
+	rRet = UnicodeFileIO::ReadString(rcFile, rcStream, endian);
+
+	if (rRet != UnicodeFileIO::Ret::OK) {
+		std::cout << "Failed to read " << rcFile << std::endl;
 		return ErrCode::FailedOpenRcFile;
 	}
-	//std::locale::global(std::locale("ja_JP.UTF-8"));
-	//rcStream.imbue(std::locale("ja_JP.UTF-8"));
 
-	static_assert(sizeof(wchar_t) == 2, "error.");//LinuxÇ≈ÇÕÇ¬Ç©Ç§cvtà·Ç§Ç©ÇÁíºÇµÇƒÇ≠ÇÍ
-	rcStream.imbue(std::locale(std::locale(""), new std::codecvt_utf8_utf16<wchar_t, 0x10ffff, std::consume_header>()));
-
+	fileVer.revision = UnicodeConvert::ToString<CharT>(rev);
+	prodVer.revision = fileVer.revision;
 
 	while (rcStream.good()) {
 		getline(rcStream, line);
 		temp = line;
 		DeleteSpace<CharT>(temp);
-		if ((pos_FILEVERSION = temp.find(GetsearchKeyword<CharT>(0))) == 0) {
-			ret = ProcFILEVERSION(line, rev, ver);
+		if ((pos_FILEVERSION = temp.find(keyFILE)) == 0) {
+			ret = ProcFILEVERSION(line, fileVer);
+			if (ret != ErrCode::OK) return ret;
 		}
-		else if ((pos_FILEVERSION = temp.find(GetsearchKeyword<CharT>(1))) == 0) {
+		else if ((pos_FILEVERSION = temp.find(keyPROD)) == 0) {
+			ret = ProcPRODUCTVERSION(line, prodVer);
+			if (ret != ErrCode::OK) return ret;
 
 		}
-		else if ((pos_FILEVERSION = temp.find(GetsearchKeyword<CharT>(2))) == 0) {
-
+		else if ((pos_FILEVERSION = temp.find(keyVFILE)) == 0) {
+			ret = ProcVFILEVERSION(line, fileVer);
+			if (ret != ErrCode::OK) return ret;
 		}
-		else if ((pos_FILEVERSION = temp.find(GetsearchKeyword<CharT>(3))) == 0) {
-
+		else if ((pos_FILEVERSION = temp.find(keyVPROD)) == 0) {
+			ret = ProcVPRODUCTVERSION(line, prodVer);
+			if (ret != ErrCode::OK) return ret;
 		}
-		tempRcStream << line;
+		tempRcStream << line << lf;
+	}
+
+	std::string outputFileName = rcFile;
+	outputFileName += ".temp";
+	wRet = UnicodeFileIO::WriteString(outputFileName.c_str(), tempRcStream, endian);
+
+	if (wRet != UnicodeFileIO::Ret::OK) {
+		std::cout << "Failed to write " << outputFileName << std::endl;
+		return ErrCode::FailedOpenTempRcFile;
 	}
 
 	return ErrCode::OK;
 }
 
-template<class CharT> ErrCode ProcFILEVERSION(std::basic_string<CharT>& line, const int rev, Version<CharT>& ver) {
+template<class CharT> ErrCode ProcFILEVERSION(std::basic_string<CharT>& line, Version<CharT>& ver) {
 	size_t posHead, posComma_major, posComma_minor, posComma_build;
-	std::basic_string<CharT> key(GetsearchKeyword<CharT>(0));
+	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(0));
+	static constexpr CharT comma = MultiTypeChar::GetComma<CharT>();
+
 	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
 
-	if ((posComma_major = line.find(GetComma<CharT>(), posHead + key.length())) == string::npos) return ErrCode::FailedGetMajorVer;
-	ver.major = line.substr(posHead + key.length(), posComma_major - 1 - (posHead + key.length()));
+	if ((posComma_major = line.find(comma, posHead + key.length())) == string::npos) return ErrCode::FailedGetMajorVer;
+	ver.major = line.substr(posHead + key.length(), posComma_major - (posHead + key.length()));
 
-	if ((posComma_minor = line.find(GetComma<CharT>(), posComma_major + 1)) == string::npos) return ErrCode::FailedGetMinorVer;
-	ver.minor = line.substr(posComma_major + 1, posComma_minor - 1 - (posComma_major + 1));
+	if ((posComma_minor = line.find(comma, posComma_major + 1)) == string::npos) return ErrCode::FailedGetMinorVer;
+	ver.minor = line.substr(posComma_major + 1, posComma_minor - (posComma_major + 1));
 
-	if ((posComma_build = line.find(GetComma<CharT>(), posComma_minor + 1)) == string::npos) return ErrCode::FailedGetBuildVer;
-	ver.build = line.substr(posComma_minor + 1, posComma_build - 1 - (posComma_minor + 1));
+	if ((posComma_build = line.find(comma, posComma_minor + 1)) == string::npos) return ErrCode::FailedGetBuildVer;
+	ver.build = line.substr(posComma_minor + 1, posComma_build - (posComma_minor + 1));
 
+	line.erase(posHead + key.length());
+	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + MultiTypeChar::GetCR<CharT>();
 
 	return ErrCode::OK;
 }
+
+template<class CharT> ErrCode ProcPRODUCTVERSION(std::basic_string<CharT>& line, Version<CharT>& ver) {
+	size_t posHead, posComma_major, posComma_minor, posComma_build;
+	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(1));
+	static constexpr CharT comma = MultiTypeChar::GetComma<CharT>();
+
+	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
+
+	if ((posComma_major = line.find(comma, posHead + key.length())) == string::npos) return ErrCode::FailedGetMajorVer;
+	ver.major = line.substr(posHead + key.length(), posComma_major - (posHead + key.length()));
+
+	if ((posComma_minor = line.find(comma, posComma_major + 1)) == string::npos) return ErrCode::FailedGetMinorVer;
+	ver.minor = line.substr(posComma_major + 1, posComma_minor - (posComma_major + 1));
+
+	if ((posComma_build = line.find(comma, posComma_minor + 1)) == string::npos) return ErrCode::FailedGetBuildVer;
+	ver.build = line.substr(posComma_minor + 1, posComma_build - (posComma_minor + 1));
+
+	line.erase(posHead + key.length());
+	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + MultiTypeChar::GetCR<CharT>();
+
+	return ErrCode::OK;
+}
+
+template<class CharT> ErrCode ProcVFILEVERSION(std::basic_string<CharT>& line, const Version<CharT>& ver) {
+	size_t posHead, posComma_major, posComma_minor, posComma_build;
+	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(2));
+	static constexpr CharT comma = MultiTypeChar::GetComma<CharT>();
+	static constexpr CharT dot = MultiTypeChar::GetDot<CharT>();
+	static constexpr CharT dquo = MultiTypeChar::GetDQuo<CharT>();
+
+	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
+
+	line.erase(posHead + key.length());
+	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo + MultiTypeChar::GetCR<CharT>();
+
+	return ErrCode::OK;
+}
+
+template<class CharT> ErrCode ProcVPRODUCTVERSION(std::basic_string<CharT>& line, const Version<CharT>& ver) {
+	size_t posHead, posComma_major, posComma_minor, posComma_build;
+	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(3));
+	static constexpr CharT comma = MultiTypeChar::GetComma<CharT>();
+	static constexpr CharT dot = MultiTypeChar::GetDot<CharT>();
+	static constexpr CharT dquo = MultiTypeChar::GetDQuo<CharT>();
+
+	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
+
+	line.erase(posHead + key.length());
+	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo + MultiTypeChar::GetCR<CharT>();
+
+	return ErrCode::OK;
+}
+
 
 #endif
