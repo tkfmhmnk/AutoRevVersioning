@@ -177,7 +177,7 @@ int main(int argc, char *argv[], char *envp[]){
 	updateRet = UpdateRcFile(argv[2]);
 	if (updateRet != ErrCode::OK) return (int)updateRet;
 
-	cout << argv[0] << ": note: Done revision versioning. :" << rev <<endl;
+	cout << argv[0] << ": note: Done revision versioning. rev=" << rev <<endl;
 
 	return 0;
 }
