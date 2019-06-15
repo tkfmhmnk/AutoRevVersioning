@@ -37,10 +37,12 @@ MULTITYPE_CSTR(
 
 enum class ErrCode :int {
 	OK = 0,
+	SameRevision,
 	InvalidArg,
 	UnknownCodePage,
 	FailedGetLog,
 	FailedOpenRevFile,
+	FailedDeleteRevFile,
 	FailedReadCommit,
 	InvalidSHA1,
 	OutRangeSHA1,
@@ -133,6 +135,7 @@ template<class CharT> ErrCode ProcFILEVERSION(std::basic_string<CharT>& line, Ve
 	size_t posHead, posComma_major, posComma_minor, posComma_build;
 	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(0));
 	static constexpr CharT comma = MultiTypeChar::GetComma<CharT>();
+	std::basic_string<CharT> oldRev;
 
 	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
 
@@ -144,6 +147,10 @@ template<class CharT> ErrCode ProcFILEVERSION(std::basic_string<CharT>& line, Ve
 
 	if ((posComma_build = line.find(comma, posComma_minor + 1)) == string::npos) return ErrCode::FailedGetBuildVer;
 	ver.build = line.substr(posComma_minor + 1, posComma_build - (posComma_minor + 1));
+
+	oldRev = line.substr(posComma_build + 1);
+	DeleteSpace(oldRev);
+	if (oldRev == ver.revision) return ErrCode::SameRevision;
 
 	line.erase(posHead + key.length());
 	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + MultiTypeChar::GetCR<CharT>();
@@ -155,6 +162,7 @@ template<class CharT> ErrCode ProcPRODUCTVERSION(std::basic_string<CharT>& line,
 	size_t posHead, posComma_major, posComma_minor, posComma_build;
 	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(1));
 	static constexpr CharT comma = MultiTypeChar::GetComma<CharT>();
+	std::basic_string<CharT> oldRev;
 
 	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
 
@@ -166,6 +174,10 @@ template<class CharT> ErrCode ProcPRODUCTVERSION(std::basic_string<CharT>& line,
 
 	if ((posComma_build = line.find(comma, posComma_minor + 1)) == string::npos) return ErrCode::FailedGetBuildVer;
 	ver.build = line.substr(posComma_minor + 1, posComma_build - (posComma_minor + 1));
+
+	oldRev = line.substr(posComma_build + 1);
+	DeleteSpace(oldRev);
+	if (oldRev == ver.revision) return ErrCode::SameRevision;
 
 	line.erase(posHead + key.length());
 	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + MultiTypeChar::GetCR<CharT>();
