@@ -31,6 +31,7 @@ limitations under the License.
 #include <string>
 namespace UnicodeFileIO {
 	enum class Endian : int {
+		None,								//!<エンディアン無し
 		BE,									//!<ビッグエンディアン
 		LE									//!<リトルエンディアン
 	};
@@ -43,11 +44,26 @@ namespace UnicodeFileIO {
 		DesFile_OpenErr,					//!<出力ファイルのオープンエラー
 		SrcStringStream_BadStatus,			//!<入力StringStreamのストリームのエラー
 		DesFileStream_BadStatus,			//!<出力ファイルのストリームのエラー
-
+		DesFile_UnknownBom,					//!<出力ファイルの不明なBOM
+		MemoryAllocationErr,				//!<メモリ確保のエラー
+		NullPointerRefernce,				//!<引数のポインタがNull
+		InvalidStreamObject,				//!<不正なストリームのobjectが与えられた
+		BufferErr,							//!<バッファサイズの不足
 	};
 
-	UNICODEFILEIO_ATTRBT Ret UNICODEFILEIO_CALL ReadString(const char* srcFileName, std::basic_stringstream<char16_t>& des, Endian &endian);
-	UNICODEFILEIO_ATTRBT Ret UNICODEFILEIO_CALL WriteString(const char* desFileName, std::basic_stringstream<char16_t>& src, const Endian &endian);
+	UNICODEFILEIO_ATTRBT Ret UNICODEFILEIO_CALL ReadString	(const char* srcFileName, std::basic_stringstream<char16_t>& des, Endian &endian);
+	UNICODEFILEIO_ATTRBT Ret UNICODEFILEIO_CALL WriteString	(const char* desFileName, std::basic_stringstream<char16_t>& src, const Endian &endian);
+
+	template<class StreamT> class UNICODEFILEIO_ATTRBT Manager {
+	public:	
+		Ret UNICODEFILEIO_CALL OpenStream(const char* fileName, Endian _endian = Endian::None);
+		Ret UNICODEFILEIO_CALL CloseStream();
+		StreamT* pStream;
+		Endian endian;
+	private:
+		static constexpr int bufSize = 1024;
+		char* fileNameBuf;
+	};
 }
 
 #endif
