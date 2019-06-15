@@ -96,7 +96,7 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <PreBuildEvent>
-      <Command>$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)" "$(ProjectDir)Version.rc" 1200</Command>
+      <Command>$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)Version.rc" 1200</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -113,6 +113,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
     </Link>
+    <PreBuildEvent>
+      <Command>$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)Version.rc" 1200</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -127,6 +130,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PreBuildEvent>
+      <Command>$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)Version.rc" 1200</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AutoRevVersioning.cpp" />
