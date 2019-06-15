@@ -59,22 +59,22 @@ namespace MultiTypeChar {
 #define _MULTITYPE_STR(arg) {arg , L##arg , u##arg , U##arg} 
 
 #define MULTITYPE_CSTR(name, ...) namespace MultiTypeChar{\
-	constexpr CStrings name[] = {__VA_ARGS__};\
-	constexpr std::size_t name##Size = sizeof(name)/sizeof(CStrings);\
+	constexpr CStrings _##name[] = {__VA_ARGS__};\
+	constexpr std::size_t name##Size = sizeof(_##name)/sizeof(CStrings);\
 	template<class CharT> constexpr const CharT* name(const int index) {\
-		return (name+index)->c;\
+		return (_##name+index)->c;\
 	};\
 	template<> constexpr const char* name<char>(const int index) {\
-		return (name+index)->c;\
+		return (_##name+index)->c;\
 	};\
 	template<> constexpr const wchar_t* name<wchar_t>(const int index) {\
-		return (name+index)->L;\
+		return (_##name+index)->L;\
 	};\
 	template<> constexpr const char16_t* name<char16_t>(const int index) {\
-		return (name+index)->u;\
+		return (_##name+index)->u;\
 	};\
 	template<> constexpr const char32_t* name<char32_t>(const int index) {\
-		return (name+index)->U;\
+		return (_##name+index)->U;\
 	};\
 }
 
