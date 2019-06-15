@@ -78,10 +78,12 @@ int main(int argc, char *argv[], char *envp[]){
 	}
 	catch (const invalid_argument& e) {
 		cout << argv[0] << ": error: " << "Invalid arg. CodePage=" << codePageStr << endl;
+		cout << argv[0] << ": error: " << e.what() << endl;
 		return (int)ErrCode::InvalidArg;
 	}
 	catch (const out_of_range& e) {
 		cout << argv[0] << ": error: " << "Invalid arg. sha1=" << codePageStr << endl;
+		cout << argv[0] << ": error: " << e.what() << endl;
 		return (int)ErrCode::InvalidArg;
 	}
 
@@ -130,10 +132,12 @@ int main(int argc, char *argv[], char *envp[]){
 		}
 		catch (const invalid_argument& e) {
 			cout << argv[0] << ": error: " << "Invalid sha1. sha1=" << sha1 << endl;
+			cout << argv[0] << ": error: " << e.what() << endl;
 			throw (int)ErrCode::InvalidSHA1;
 		}
 		catch (const out_of_range& e) {
 			cout << argv[0] << ": error: " << "Invalid sha1. sha1=" << sha1 << endl;
+			cout << argv[0] << ": error: " << e.what() << endl;
 			throw ErrCode::OutRangeSHA1;
 		}
 	}

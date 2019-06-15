@@ -186,7 +186,7 @@ template<class CharT> ErrCode ProcPRODUCTVERSION(std::basic_string<CharT>& line,
 }
 
 template<class CharT> ErrCode ProcVFILEVERSION(std::basic_string<CharT>& line, const Version<CharT>& ver) {
-	size_t posHead, posComma_major, posComma_minor, posComma_build;
+	size_t posHead;
 	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(2));
 	static constexpr CharT comma = MultiTypeChar::GetComma<CharT>();
 	static constexpr CharT dot = MultiTypeChar::GetDot<CharT>();
@@ -201,7 +201,7 @@ template<class CharT> ErrCode ProcVFILEVERSION(std::basic_string<CharT>& line, c
 }
 
 template<class CharT> ErrCode ProcVPRODUCTVERSION(std::basic_string<CharT>& line, const Version<CharT>& ver) {
-	size_t posHead, posComma_major, posComma_minor, posComma_build;
+	size_t posHead;
 	std::basic_string<CharT> key(MultiTypeChar::GetsearchKeyword<CharT>(3));
 	static constexpr CharT comma = MultiTypeChar::GetComma<CharT>();
 	static constexpr CharT dot = MultiTypeChar::GetDot<CharT>();
