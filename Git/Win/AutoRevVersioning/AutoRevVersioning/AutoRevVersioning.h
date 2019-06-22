@@ -21,17 +21,20 @@ limitations under the License.
 #include<fstream>
 #include<string>
 #include"DeleteSpace.h"
-#include"UnicodeFileIO.h"
-#include"MultiTypeChar.h"
-#include"UnicodeConvert.h"
 
-MULTITYPE_CSTR(
-	searchKeyword,
-	_MULTITYPE_STR("FILEVERSION "),
-	_MULTITYPE_STR("PRODUCTVERSION "),
-	_MULTITYPE_STR("VALUE \"FileVersion\""),
-	_MULTITYPE_STR("VALUE \"ProductVersion\"")
-);
+#include"mtcLiteral.h"
+#include"mtcNumericConv.h"
+#include"mtcFileIO.h"
+
+namespace mtc {
+	MULTITYPE_CSTR(
+		searchKeyword,
+		_MULTITYPE_STR("FILEVERSION "),
+		_MULTITYPE_STR("PRODUCTVERSION "),
+		_MULTITYPE_STR("VALUE \"FileVersion\""),
+		_MULTITYPE_STR("VALUE \"ProductVersion\"")
+	);
+}
 
 enum class ErrCode :int {
 	OK = 0,
@@ -62,8 +65,8 @@ public:
 };
 
 template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile) {
-	UnicodeFileIO::Manager<std::basic_istream<CharT>> rcStreamManager;
-	UnicodeFileIO::Manager<std::basic_ostream<CharT>> tempRcStreamManager;
+	mtc::FileIO::Manager<std::basic_istream<CharT>> rcStreamManager;
+	mtc::FileIO::Manager<std::basic_ostream<CharT>> tempRcStreamManager;
 	std::basic_string<CharT> line;
 	std::basic_string<CharT> temp;
 	size_t pos_FILEVERSION;
@@ -73,17 +76,17 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 	Version<CharT> fileVer;
 	Version<CharT> prodVer;
 
-	UnicodeFileIO::Ret rRet;
-	UnicodeFileIO::Ret wRet;
+	mtc::FileIO::Ret rRet;
+	mtc::FileIO::Ret wRet;
 
-	static constexpr CharT lf = MultiTypeChar::LF<CharT>();
-	static constexpr const CharT* keyFILE = MultiTypeChar::searchKeyword<CharT>(0);
-	static constexpr const CharT* keyPROD = MultiTypeChar::searchKeyword<CharT>(1);
-	static constexpr const CharT* keyVFILE = MultiTypeChar::searchKeyword<CharT>(2);
-	static constexpr const CharT* keyVPROD = MultiTypeChar::searchKeyword<CharT>(3);
+	static constexpr CharT lf = mtc::LF<CharT>();
+	static constexpr const CharT* keyFILE = mtc::searchKeyword<CharT>(0);
+	static constexpr const CharT* keyPROD = mtc::searchKeyword<CharT>(1);
+	static constexpr const CharT* keyVFILE = mtc::searchKeyword<CharT>(2);
+	static constexpr const CharT* keyVPROD = mtc::searchKeyword<CharT>(3);
 
 	rRet = rcStreamManager.OpenStream(rcFile);
-	if (rRet != UnicodeFileIO::Ret::OK) {
+	if (rRet != mtc::FileIO::Ret::OK) {
 		std::cout << "Failed to read " << rcFile << std::endl;
 		return ErrCode::FailedOpenRcFile;
 	}
@@ -91,14 +94,14 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 	std::string outputFileName = rcFile;
 	outputFileName += ".temp";
 	wRet = tempRcStreamManager.OpenStream(outputFileName.c_str(), rcStreamManager.endian);
-	if (wRet != UnicodeFileIO::Ret::OK) {
+	if (wRet != mtc::FileIO::Ret::OK) {
 		std::cout << "Failed to write " << outputFileName << std::endl;
 		rcStreamManager.CloseStream();
 		return ErrCode::FailedOpenTempRcFile;
 	}
 
 	try {
-		fileVer.revision = UnicodeConvert::ToString<CharT>(rev);
+		fileVer.revision =mtc::NumericConv::ToString<CharT>(rev);
 		prodVer.revision = fileVer.revision;
 
 		std::basic_istream<CharT>& rcStream = *(rcStreamManager.pStream);
@@ -141,8 +144,8 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 
 template<class CharT> ErrCode ProcFILEVERSION(std::basic_string<CharT>& line, Version<CharT>& ver) {
 	size_t posHead, posComma_major, posComma_minor, posComma_build;
-	std::basic_string<CharT> key(MultiTypeChar::searchKeyword<CharT>(0));
-	static constexpr CharT comma = MultiTypeChar::Comma<CharT>();
+	std::basic_string<CharT> key(mtc::searchKeyword<CharT>(0));
+	static constexpr CharT comma = mtc::Comma<CharT>();
 	std::basic_string<CharT> oldRev;
 
 	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
@@ -161,15 +164,15 @@ template<class CharT> ErrCode ProcFILEVERSION(std::basic_string<CharT>& line, Ve
 	if (oldRev == ver.revision) return ErrCode::SameRevision;
 
 	line.erase(posHead + key.length());
-	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + MultiTypeChar::CR<CharT>();
+	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + mtc::CR<CharT>();
 
 	return ErrCode::OK;
 }
 
 template<class CharT> ErrCode ProcPRODUCTVERSION(std::basic_string<CharT>& line, Version<CharT>& ver) {
 	size_t posHead, posComma_major, posComma_minor, posComma_build;
-	std::basic_string<CharT> key(MultiTypeChar::searchKeyword<CharT>(1));
-	static constexpr CharT comma = MultiTypeChar::Comma<CharT>();
+	std::basic_string<CharT> key(mtc::searchKeyword<CharT>(1));
+	static constexpr CharT comma = mtc::Comma<CharT>();
 	std::basic_string<CharT> oldRev;
 
 	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
@@ -188,37 +191,37 @@ template<class CharT> ErrCode ProcPRODUCTVERSION(std::basic_string<CharT>& line,
 	if (oldRev == ver.revision) return ErrCode::SameRevision;
 
 	line.erase(posHead + key.length());
-	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + MultiTypeChar::CR<CharT>();
+	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + mtc::CR<CharT>();
 
 	return ErrCode::OK;
 }
 
 template<class CharT> ErrCode ProcVFILEVERSION(std::basic_string<CharT>& line, const Version<CharT>& ver) {
 	size_t posHead;
-	std::basic_string<CharT> key(MultiTypeChar::searchKeyword<CharT>(2));
-	static constexpr CharT comma = MultiTypeChar::Comma<CharT>();
-	static constexpr CharT dot = MultiTypeChar::Dot<CharT>();
-	static constexpr CharT dquo = MultiTypeChar::DQuo<CharT>();
+	std::basic_string<CharT> key(mtc::searchKeyword<CharT>(2));
+	static constexpr CharT comma = mtc::Comma<CharT>();
+	static constexpr CharT dot = mtc::Dot<CharT>();
+	static constexpr CharT dquo = mtc::DQuo<CharT>();
 
 	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
 
 	line.erase(posHead + key.length());
-	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo + MultiTypeChar::CR<CharT>();
+	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo + mtc::CR<CharT>();
 
 	return ErrCode::OK;
 }
 
 template<class CharT> ErrCode ProcVPRODUCTVERSION(std::basic_string<CharT>& line, const Version<CharT>& ver) {
 	size_t posHead;
-	std::basic_string<CharT> key(MultiTypeChar::searchKeyword<CharT>(3));
-	static constexpr CharT comma = MultiTypeChar::Comma<CharT>();
-	static constexpr CharT dot = MultiTypeChar::Dot<CharT>();
-	static constexpr CharT dquo = MultiTypeChar::DQuo<CharT>();
+	std::basic_string<CharT> key(mtc::searchKeyword<CharT>(3));
+	static constexpr CharT comma = mtc::Comma<CharT>();
+	static constexpr CharT dot = mtc::Dot<CharT>();
+	static constexpr CharT dquo = mtc::DQuo<CharT>();
 
 	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
 
 	line.erase(posHead + key.length());
-	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo + MultiTypeChar::CR<CharT>();
+	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo + mtc::CR<CharT>();
 
 	return ErrCode::OK;
 }
