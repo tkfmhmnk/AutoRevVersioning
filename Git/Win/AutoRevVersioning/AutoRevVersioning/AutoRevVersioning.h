@@ -116,26 +116,28 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 
 		while (rcStream.good()) {
 			getline(rcStream, line);
-			temp = line;
-			DeleteSpace<CharT>(temp);
-			if ((pos_FILEVERSION = temp.find(keyFILE)) == 0) {
-				ret = ProcFILEVERSION(line, fileVer);
-				if (ret != ErrCode::OK) throw ret;
-			}
-			else if ((pos_FILEVERSION = temp.find(keyPROD)) == 0) {
-				ret = ProcPRODUCTVERSION(line, prodVer);
-				if (ret != ErrCode::OK) throw ret;
+			if (rcStream.good()) {
+				temp = line;
+				DeleteSpace<CharT>(temp);
+				if ((pos_FILEVERSION = temp.find(keyFILE)) == 0) {
+					ret = ProcFILEVERSION(line, fileVer);
+					if (ret != ErrCode::OK) throw ret;
+				}
+				else if ((pos_FILEVERSION = temp.find(keyPROD)) == 0) {
+					ret = ProcPRODUCTVERSION(line, prodVer);
+					if (ret != ErrCode::OK) throw ret;
 
+				}
+				else if ((pos_FILEVERSION = temp.find(keyVFILE)) == 0) {
+					ret = ProcVFILEVERSION(line, fileVer);
+					if (ret != ErrCode::OK) throw ret;
+				}
+				else if ((pos_FILEVERSION = temp.find(keyVPROD)) == 0) {
+					ret = ProcVPRODUCTVERSION(line, prodVer);
+					if (ret != ErrCode::OK) throw ret;
+				}
+				if (tempRcStream << line << lf;
 			}
-			else if ((pos_FILEVERSION = temp.find(keyVFILE)) == 0) {
-				ret = ProcVFILEVERSION(line, fileVer);
-				if (ret != ErrCode::OK) throw ret;
-			}
-			else if ((pos_FILEVERSION = temp.find(keyVPROD)) == 0) {
-				ret = ProcVPRODUCTVERSION(line, prodVer);
-				if (ret != ErrCode::OK) throw ret;
-			}
-			tempRcStream << line << lf;
 		}
 	}
 	catch (const ErrCode& e) {
@@ -277,13 +279,15 @@ template<class CharT> ErrCode ReplaceHeaderVersion(const int rev, const char* he
 
 		while (headerStream.good()) {
 			getline(headerStream, line);
-			temp = line;
-			DeleteSpace<CharT>(temp);
-			if ((pos_version = temp.find(keyVersion)) == 0) {
-				ret = ProcHeaderVersion(line, fileVer);
-				if (ret != ErrCode::OK) throw ret;
+			if (headerStream.good()) {
+				temp = line;
+				DeleteSpace<CharT>(temp);
+				if ((pos_version = temp.find(keyVersion)) == 0) {
+					ret = ProcHeaderVersion(line, fileVer);
+					if (ret != ErrCode::OK) throw ret;
+				}
+				tempRcStream << line << lf;
 			}
-			if(headerStream.good())	tempRcStream << line << lf;
 		}
 	}
 	catch (const ErrCode& e) {
@@ -325,3 +329,4 @@ template<class CharT> ErrCode ProcHeaderVersion(std::basic_string<CharT>& line, 
 }
 
 
+#endif
