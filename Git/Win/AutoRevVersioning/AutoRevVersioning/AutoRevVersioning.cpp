@@ -25,6 +25,8 @@ using namespace std;
 
 static const char* gitRevFile = "AutoRevVersioning_gitrev";
 
+int GetGitRev(const char* exePath, const char* projDir, int& rev);
+
 ErrCode UpdateRcFile(const char* rcfile) {
 	string cmd;
 	int cmd_ret;
@@ -51,23 +53,19 @@ int DeleteFile(const char* file) {
 	return 0;
 }
 
-int main(int argc, char *argv[], char *envp[]){
-	if (argc != 4) {
-		cout << argv[0] << "Usage: AutoRevVersioning.exe <projectdir> <rcfilepath> <code page>" << endl;
+int main(int argc, char* argv[], char* envp[]) {
+	if (argc != 6) {
+		cout << argv[0] << "Usage: AutoRevVersioning.exe <projectdir> <filepath> <file codepage> <filetype> <repositorytype>" << endl;
 		return (int)ErrCode::InvalidArg;
 	}
 
-	
-
-	string projectdir(argv[1]);
-	string cmd;
+	string repositoryType(argv[5]);
 	int codePage;
 	string codePageStr(argv[3]);
-	int cmd_ret;
+	int rev;										//git:SHA1‚Ìæ“ª‚à4•¶Žš‚Ì”’l
 	ErrCode replaseRet;
 	ErrCode updateRet;
 
-	cmd = "git log -1 " + projectdir + " 1>" + gitRevFile;
 	try {
 		size_t idx;
 		codePage = stoi(codePageStr, &idx, 10);
@@ -82,26 +80,76 @@ int main(int argc, char *argv[], char *envp[]){
 		return (int)ErrCode::InvalidArg;
 	}
 	catch (const out_of_range& e) {
-		cout << argv[0] << ": error: " << "Invalid arg. sha1=" << codePageStr << endl;
+		cout << argv[0] << ": error: " << "Invalid arg. CodePage=" << codePageStr << endl;
 		cout << argv[0] << ": error: " << e.what() << endl;
 		return (int)ErrCode::InvalidArg;
 	}
 
+	int ret;
+	if ((repositoryType == "git") || (repositoryType == "Git")) {
+		ret = GetGitRev(argv[0],argv[1],rev);
+	}
+	else if ((repositoryType == "svn") || (repositoryType == "SVN")) {
+
+	}
+	else {
+
+
+	}
+
+	if (ret == 0) {
+		switch (codePage) {
+		case 1200:
+			replaseRet = ReplaceRcVersion<char16_t>(rev, argv[2]);
+			break;
+
+		case 932:
+			replaseRet = ReplaceRcVersion<char>(rev, argv[2]);
+			break;
+
+		default:
+			return (int)ErrCode::UnknownCodePage;
+			break;
+		}
+		if (replaseRet == ErrCode::SameRevision) {
+			cout << argv[0] << ": warning: Same revision. Skip revision versioning." << endl;
+			return 0;
+		}
+		else if (replaseRet != ErrCode::OK) {
+			cout << argv[0] << ": error: " << "Failed to replace revision of rc file. : " << argv[2] << endl;
+			return (int)replaseRet;
+		}
+		updateRet = UpdateRcFile(argv[2]);
+		if (updateRet != ErrCode::OK) return (int)updateRet;
+
+		cout << argv[0] << ": note: Done revision versioning. rev=" << rev << endl;
+
+		return 0;
+
+
+	}
+
+}
+
+int GetGitRev(const char* exePath,const char* projDir,int& rev){
+	string projectdir(projDir);
+	string cmd;
+	int cmd_ret;
+
+	cmd = "git log -1 " + projectdir + " 1>" + gitRevFile;
 	cmd_ret = system(cmd.c_str());
 
 	if (cmd_ret != 0) {
-		cout << argv[0] << ": error: " << "ErrorCode=" << cmd_ret << " : cmd=" << cmd << endl;
+		cout << exePath << ": error: " << "ErrorCode=" << cmd_ret << " : cmd=" << cmd << endl;
 		return (int)ErrCode::FailedGetLog;
 	}
 
 	ifstream gitRevStream(gitRevFile);
 	if (!gitRevStream.is_open()) {
-		cout << argv[0] << ": error: " << "Failed to open " << gitRevFile << endl;
+		cout << exePath << ": error: " << "Failed to open " << gitRevFile << endl;
 		return (int)ErrCode::FailedOpenRevFile;
 	}
 
-
-	int rev;										//SHA1‚Ìæ“ª‚à4•¶Žš‚Ì”’l
 	try {
 		string commitLine;								//commit SHA1‚Ìs‚Ì•¶Žš—ñ
 		string sha1;									//SHA1‚Ì•¶Žš—ñ
@@ -112,77 +160,55 @@ int main(int argc, char *argv[], char *envp[]){
 		getline(gitRevStream, commitLine);
 		pos = commitLine.find("commit ");
 		if (pos == string::npos) {
-			cout << argv[0] << ": error: " << "Not found commit" << endl;
+			cout << exePath << ": error: " << "Not found commit" << endl;
 			throw ErrCode::FailedReadCommit;
 		}
 
 		sha1 = commitLine.substr(pos + 7);
 		if (sha1.length() < 4) {
-			cout << argv[0] << ": error: " << "Invalid sha1. sha1=" << sha1 << endl;
+			cout << exePath << ": error: " << "Invalid sha1. sha1=" << sha1 << endl;
 			throw ErrCode::InvalidSHA1;
 		}
 		sha1short = sha1.substr(0, 4);
 		try {
 			rev = stoi(sha1short, &idx, 16);
 			if (idx != sha1short.length()) {
-				cout << argv[0] << ": error: " << "Invalid sha1. sha1=" << sha1 << endl;
+				cout << exePath << ": error: " << "Invalid sha1. sha1=" << sha1 << endl;
 				throw ErrCode::InvalidSHA1;
 			}
-			cout << argv[0] << ": note: " << "Get revision(" << argv[1] <<"): " << sha1 << endl;
+			cout << exePath << ": note: " << "Get revision(" << projDir <<"): " << sha1 << endl;
 		}
 		catch (const invalid_argument& e) {
-			cout << argv[0] << ": error: " << "Invalid sha1. sha1=" << sha1 << endl;
-			cout << argv[0] << ": error: " << e.what() << endl;
+			cout << exePath << ": error: " << "Invalid sha1. sha1=" << sha1 << endl;
+			cout << exePath << ": error: " << e.what() << endl;
 			throw (int)ErrCode::InvalidSHA1;
 		}
 		catch (const out_of_range& e) {
-			cout << argv[0] << ": error: " << "Invalid sha1. sha1=" << sha1 << endl;
-			cout << argv[0] << ": error: " << e.what() << endl;
+			cout << exePath << ": error: " << "Invalid sha1. sha1=" << sha1 << endl;
+			cout << exePath << ": error: " << e.what() << endl;
 			throw ErrCode::OutRangeSHA1;
 		}
 	}
 	catch (const ErrCode& e) {
 		gitRevStream.close();
+		DeleteFile(gitRevFile);
 		return (int)e;
 	}
 	catch (...) {
 		gitRevStream.close();
-		cout << argv[0] << ": error: " << "Unknown" << endl;
+		DeleteFile(gitRevFile);
+		cout << exePath << ": error: " << "Unknown" << endl;
 		return (int)ErrCode::Unknown;
 	}
 	gitRevStream.close();
 	if (DeleteFile(gitRevFile) != 0) {
-		cout << argv[0] << ": error: " << "Failed to delete temporary file." << endl;
+		cout << exePath << ": error: " << "Failed to delete temporary file." << endl;
 		return (int)ErrCode::FailedDeleteRevFile;
 	}
-
-
-	switch (codePage) {
-	case 1200:
-		replaseRet = ReplaceRcVersion<char16_t>(rev, argv[2]);
-		break;
-
-	case 932:
-		replaseRet = ReplaceRcVersion<char>(rev, argv[2]);
-		break;
-
-	default:
-		return (int)ErrCode::UnknownCodePage;
-		break;
-	}
-	if (replaseRet == ErrCode::SameRevision) {
-		cout << argv[0] << ": warning: Same revision. Skip revision versioning." << endl;
-		return 0;
-	}
-	else if (replaseRet != ErrCode::OK) {
-		cout << argv[0] << ": error: " << "Failed to replace revision of rc file. : "  << argv[2] << endl;
-		return (int)replaseRet;
-	}
-	updateRet = UpdateRcFile(argv[2]);
-	if (updateRet != ErrCode::OK) return (int)updateRet;
-
-	cout << argv[0] << ": note: Done revision versioning. rev=" << rev <<endl;
 
 	return 0;
 }
 
+int GetSVNRev(const char* exePath, const char* projDir, int& rev) {
+	return 0;
+}
