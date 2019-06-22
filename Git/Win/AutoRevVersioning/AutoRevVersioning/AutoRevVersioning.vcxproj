@@ -81,7 +81,9 @@
     <Import Project="..\MultiTypeCharLibrary\PropertySheet\mtcNumericConv.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -94,7 +96,8 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)Version.rc" 1200</Command>
+      <Command>$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)Version.rc" 1200 rc git
+$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)AutoRevVersioning.h" 932  header git</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

@@ -1,0 +1,2 @@
+"$(ProjectDir)\" "$(ProjectDir)Version.rc" 1200  rc git
+"$(ProjectDir)\" "$(ProjectDir)test_header.h" 932  header git

@@ -329,3 +329,7 @@ ASALocalRun/
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
 /Git/Win/AutoRevVersioning/MultiTypeCharLibrary
+/Git/Win/AutoRevVersioning/svn_testrepo
+/Git/Win/AutoRevVersioning/AutoRevVersioning/mtcNumericConv.dll
+/Git/Win/AutoRevVersioning/AutoRevVersioning/mtcFileIO.dll
+/Git/Win/AutoRevVersioning/AutoRevVersioning/AutoRevVersioning.exe
