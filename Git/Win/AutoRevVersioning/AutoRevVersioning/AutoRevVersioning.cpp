@@ -27,10 +27,10 @@ static const char* gitRevFile = "AutoRevVersioning_gitrev";
 
 int GetGitRev(const char* exePath, const char* projDir, int& rev);
 
-ErrCode UpdateRcFile(const char* rcfile) {
+ErrCode UpdateFile(const char* file) {
 	string cmd;
 	int cmd_ret;
-	cmd = "move /Y " + string(rcfile) + ".temp " + string(rcfile) + " > nul";
+	cmd = "move /Y " + string(file) + ".temp " + string(file) + " > nul";
 	cmd_ret = system(cmd.c_str());
 
 	if (cmd_ret != 0) {
@@ -132,13 +132,15 @@ int main(int argc, char* argv[], char* envp[]) {
 
 		if (replaseRet == ErrCode::SameRevision) {
 			cout << argv[0] << ": warning: Same revision. Skip revision versioning." << endl;
+			DeleteFile((string(argv[2]) + ".temp").c_str());
 			return 0;
 		}
 		else if (replaseRet != ErrCode::OK) {
 			cout << argv[0] << ": error: " << "Failed to replace revision of rc file. : " << argv[2] << endl;
+			DeleteFile((string(argv[2]) + ".temp").c_str());
 			return (int)replaseRet;
 		}
-		updateRet = UpdateRcFile(argv[2]);
+		updateRet = UpdateFile(argv[2]);
 		if (updateRet != ErrCode::OK) return (int)updateRet;
 
 		cout << argv[0] << ": note: Done revision versioning. rev=" << rev << endl;

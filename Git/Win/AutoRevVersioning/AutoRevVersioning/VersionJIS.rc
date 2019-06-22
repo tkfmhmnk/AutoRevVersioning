@@ -50,8 +50,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,14445
- PRODUCTVERSION 1,0,0,14445
+ FILEVERSION 1,0,0,8065
+ PRODUCTVERSION 1,0,0,8065
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -68,12 +68,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "TODO: <会社名>"
             VALUE "FileDescription", "TODO: <ファイルの説明>"
-            VALUE "FileVersion","1.0.0.14445"
+            VALUE "FileVersion","1.0.0.8065"
             VALUE "InternalName", "AutoRevV.exe"
             VALUE "LegalCopyright", "Copyright (C) 2019"
             VALUE "OriginalFilename", "AutoRevV.exe"
             VALUE "ProductName", "TODO: <製品名>"
-            VALUE "ProductVersion","1.0.0.14445"
+            VALUE "ProductVersion","1.0.0.8065"
         END
     END
     BLOCK "VarFileInfo"

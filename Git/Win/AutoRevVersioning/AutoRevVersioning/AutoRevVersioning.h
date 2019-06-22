@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 /**
-	@version 0.0.0.14445
+	@version 0.0.0.8065
 */
 
 #ifndef _AUTO_REV_VERSIONING_H
@@ -261,7 +261,6 @@ template<class CharT> ErrCode ReplaceHeaderVersion(const int rev, const char* he
 	ErrCode ret;
 
 	Version<CharT> fileVer;
-	Version<CharT> prodVer;
 
 	mtc::FileIO::Ret rRet;
 	mtc::FileIO::Ret wRet;
@@ -291,7 +290,6 @@ template<class CharT> ErrCode ReplaceHeaderVersion(const int rev, const char* he
 
 	try {
 		fileVer.revision = mtc::NumericConv::ToString<CharT>(rev);
-		prodVer.revision = fileVer.revision;
 
 		std::basic_istream<CharT>& headerStream = *(headerStreamManager.pStream);
 		std::basic_ostream<CharT>& tempRcStream = *(tempHeaderStreamManager.pStream);

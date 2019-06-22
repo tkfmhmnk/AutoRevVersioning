@@ -109,7 +109,8 @@ $(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)AutoRevVersion
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <PreBuildEvent>
-      <Command>$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)Version.rc" 1200</Command>
+      <Command>$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)Version.rc" 1200 rc git
+$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)AutoRevVersioning.h" 932  header git</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -128,7 +129,8 @@ $(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)AutoRevVersion
       <SubSystem>Console</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)Version.rc" 1200</Command>
+      <Command>$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)Version.rc" 1200 rc git
+$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)AutoRevVersioning.h" 932  header git</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -146,7 +148,8 @@ $(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)AutoRevVersion
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent>
-      <Command>$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)Version.rc" 1200</Command>
+      <Command>$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)Version.rc" 1200 rc git
+$(ProjectDir)AutoRevVersioning.exe "$(ProjectDir)\" "$(ProjectDir)AutoRevVersioning.h" 932  header git</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
