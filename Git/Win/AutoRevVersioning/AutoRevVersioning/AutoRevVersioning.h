@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 /**
-	@version 0.0.0.57071
+	@version 0.0.0.30472
 */
 
 #ifndef _AUTO_REV_VERSIONING_H
@@ -24,7 +24,6 @@ limitations under the License.
 #include<fstream>
 #include<string>
 #include"DeleteSpace.h"
-
 
 #include"mtcLiteral.h"
 #include"mtcNumericConv.h"
@@ -88,10 +87,15 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 	mtc::FileIO::Ret wRet;
 
 	static constexpr CharT lf = mtc::LF<CharT>();
+	static constexpr CharT cr = mtc::CR<CharT>();
 	static constexpr const CharT* keyFILE = mtc::searchKeyword<CharT>(0);
 	static constexpr const CharT* keyPROD = mtc::searchKeyword<CharT>(1);
 	static constexpr const CharT* keyVFILE = mtc::searchKeyword<CharT>(2);
 	static constexpr const CharT* keyVPROD = mtc::searchKeyword<CharT>(3);
+
+	const CharT* endline;
+	static constexpr const CharT endline_CRLF[] = { mtc::CR<CharT>(),mtc::LF<CharT>(),mtc::NullChar<CharT>() };
+	static constexpr const CharT endline_LF[] = {mtc::LF<CharT>(),mtc::NullChar<CharT>() };
 
 	rRet = rcStreamManager.OpenStream(rcFile);
 	if (rRet != mtc::FileIO::Ret::OK) {
@@ -117,6 +121,12 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 
 		while (rcStream.good()) {
 			getline(rcStream, line);
+			if (line.back() == cr) {
+				line.pop_back();
+				endline = endline_CRLF;
+			}
+			else endline = endline_LF;
+
 			temp = line;
 			DeleteSpace<CharT>(temp);
 			if ((pos_FILEVERSION = temp.find(keyFILE)) == 0) {
@@ -140,7 +150,7 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 				tempRcStream << line;
 			}
 			else {
-				tempRcStream << line << lf;
+				tempRcStream << line << endline;
 			}
 		}
 	}
@@ -177,7 +187,7 @@ template<class CharT> ErrCode ProcFILEVERSION(std::basic_string<CharT>& line, Ve
 	if (oldRev == ver.revision) return ErrCode::SameRevision;
 
 	line.erase(posHead + key.length());
-	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + mtc::CR<CharT>();
+	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision;
 
 	return ErrCode::OK;
 }
@@ -204,7 +214,7 @@ template<class CharT> ErrCode ProcPRODUCTVERSION(std::basic_string<CharT>& line,
 	if (oldRev == ver.revision) return ErrCode::SameRevision;
 
 	line.erase(posHead + key.length());
-	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision + mtc::CR<CharT>();
+	line = line + ver.major + comma + ver.minor + comma + ver.build + comma + ver.revision;
 
 	return ErrCode::OK;
 }
@@ -219,7 +229,7 @@ template<class CharT> ErrCode ProcVFILEVERSION(std::basic_string<CharT>& line, c
 	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
 
 	line.erase(posHead + key.length());
-	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo + mtc::CR<CharT>();
+	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo;
 
 	return ErrCode::OK;
 }
@@ -234,7 +244,7 @@ template<class CharT> ErrCode ProcVPRODUCTVERSION(std::basic_string<CharT>& line
 	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
 
 	line.erase(posHead + key.length());
-	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo + mtc::CR<CharT>();
+	line = line + comma + dquo + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision + dquo;
 
 	return ErrCode::OK;
 }
@@ -257,7 +267,12 @@ template<class CharT> ErrCode ReplaceHeaderVersion(const int rev, const char* he
 	mtc::FileIO::Ret wRet;
 
 	static constexpr CharT lf = mtc::LF<CharT>();
+	static constexpr CharT cr = mtc::CR<CharT>();
 	static constexpr const CharT* keyVersion = mtc::headerKeyword<CharT>(0);
+
+	const CharT* endline;
+	static constexpr const CharT endline_CRLF[] = { mtc::CR<CharT>(),mtc::LF<CharT>(),mtc::NullChar<CharT>() };
+	static constexpr const CharT endline_LF[] = { mtc::LF<CharT>(),mtc::NullChar<CharT>() };
 
 	rRet = headerStreamManager.OpenStream(headerFile);
 	if (rRet != mtc::FileIO::Ret::OK) {
@@ -283,6 +298,12 @@ template<class CharT> ErrCode ReplaceHeaderVersion(const int rev, const char* he
 
 		while (headerStream.good()) {
 			getline(headerStream, line);
+			if (line.back() == cr) {
+				line.pop_back();
+				endline = endline_CRLF;
+			}
+			else endline = endline_LF;
+
 			temp = line;
 			DeleteSpace<CharT>(temp);
 			if ((pos_version = temp.find(keyVersion)) == 0) {
