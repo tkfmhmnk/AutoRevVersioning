@@ -14,6 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/**
+	@version 0.0.0.46000
+*/
 
 #ifndef _AUTO_REV_VERSIONING_H
 #define _AUTO_REV_VERSIONING_H
@@ -33,6 +36,10 @@ namespace mtc {
 		_MULTITYPE_STR("PRODUCTVERSION "),
 		_MULTITYPE_STR("VALUE \"FileVersion\""),
 		_MULTITYPE_STR("VALUE \"ProductVersion\"")
+	);
+	MULTITYPE_CSTR(
+		headerKeyword,
+		_MULTITYPE_STR("@version "),
 	);
 }
 
@@ -227,4 +234,94 @@ template<class CharT> ErrCode ProcVPRODUCTVERSION(std::basic_string<CharT>& line
 }
 
 
-#endif
+
+template<class CharT> ErrCode ReplaceHeaderVersion(const int rev, const char* headerFile) {
+	mtc::FileIO::Manager<std::basic_istream<CharT>> headerStreamManager;
+	mtc::FileIO::Manager<std::basic_ostream<CharT>> tempHeaderStreamManager;
+	std::basic_string<CharT> line;
+	std::basic_string<CharT> temp;
+	size_t pos_version;
+
+	ErrCode ret;
+
+	Version<CharT> fileVer;
+	Version<CharT> prodVer;
+
+	mtc::FileIO::Ret rRet;
+	mtc::FileIO::Ret wRet;
+
+	static constexpr CharT lf = mtc::LF<CharT>();
+	static constexpr const CharT* keyVersion = mtc::headerKeyword<CharT>(0);
+
+	rRet = headerStreamManager.OpenStream(headerFile);
+	if (rRet != mtc::FileIO::Ret::OK) {
+		std::cout << "Failed to read " << headerFile << std::endl;
+		return ErrCode::FailedOpenRcFile;
+	}
+
+	std::string outputFileName = headerFile;
+	outputFileName += ".temp";
+	wRet = tempHeaderStreamManager.OpenStream(outputFileName.c_str(), headerStreamManager.endian);
+	if (wRet != mtc::FileIO::Ret::OK) {
+		std::cout << "Failed to write " << outputFileName << std::endl;
+		headerStreamManager.CloseStream();
+		return ErrCode::FailedOpenTempRcFile;
+	}
+
+	try {
+		fileVer.revision = mtc::NumericConv::ToString<CharT>(rev);
+		prodVer.revision = fileVer.revision;
+
+		std::basic_istream<CharT>& headerStream = *(headerStreamManager.pStream);
+		std::basic_ostream<CharT>& tempRcStream = *(tempHeaderStreamManager.pStream);
+
+		while (headerStream.good()) {
+			getline(headerStream, line);
+			temp = line;
+			DeleteSpace<CharT>(temp);
+			if ((pos_version = temp.find(keyVersion)) == 0) {
+				ret = ProcHeaderVersion(line, fileVer);
+				if (ret != ErrCode::OK) throw ret;
+			}
+			if(headerStream.good())	tempRcStream << line << lf;
+		}
+	}
+	catch (const ErrCode& e) {
+		headerStreamManager.CloseStream();
+		tempHeaderStreamManager.CloseStream();
+		return e;
+	}
+
+	headerStreamManager.CloseStream();
+	tempHeaderStreamManager.CloseStream();
+	return ErrCode::OK;
+}
+
+template<class CharT> ErrCode ProcHeaderVersion(std::basic_string<CharT>& line, Version<CharT>& ver) {
+	size_t posHead, posDot_major, posDot_minor, posDot_build;
+	std::basic_string<CharT> key(mtc::headerKeyword<CharT>(0));
+	static constexpr CharT dot = mtc::Dot<CharT>();
+	std::basic_string<CharT> oldRev;
+
+	if ((posHead = line.find(key)) == string::npos) return ErrCode::Unknown;
+
+	if ((posDot_major = line.find(dot, posHead + key.length())) == string::npos) return ErrCode::FailedGetMajorVer;
+	ver.major = line.substr(posHead + key.length(), posDot_major - (posHead + key.length()));
+
+	if ((posDot_minor = line.find(dot, posDot_major + 1)) == string::npos) return ErrCode::FailedGetMinorVer;
+	ver.minor = line.substr(posDot_major + 1, posDot_minor - (posDot_major + 1));
+
+	if ((posDot_build = line.find(dot, posDot_minor + 1)) == string::npos) return ErrCode::FailedGetBuildVer;
+	ver.build = line.substr(posDot_minor + 1, posDot_build - (posDot_minor + 1));
+
+	oldRev = line.substr(posDot_build + 1);
+	DeleteSpace(oldRev);
+	if (oldRev == ver.revision) return ErrCode::SameRevision;
+
+	line.erase(posHead + key.length());
+	line = line + ver.major + dot + ver.minor + dot + ver.build + dot + ver.revision;
+
+	return ErrCode::OK;
+}
+
+

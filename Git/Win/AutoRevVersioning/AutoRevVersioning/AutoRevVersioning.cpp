@@ -59,6 +59,7 @@ int main(int argc, char* argv[], char* envp[]) {
 		return (int)ErrCode::InvalidArg;
 	}
 
+	string fileType(argv[4]);
 	string repositoryType(argv[5]);
 	int codePage;
 	string codePageStr(argv[3]);
@@ -98,19 +99,37 @@ int main(int argc, char* argv[], char* envp[]) {
 	}
 
 	if (ret == 0) {
-		switch (codePage) {
-		case 1200:
-			replaseRet = ReplaceRcVersion<char16_t>(rev, argv[2]);
-			break;
+		if (fileType == "rc") {
+			switch (codePage) {
+			case 1200:
+				replaseRet = ReplaceRcVersion<char16_t>(rev, argv[2]);
+				break;
 
-		case 932:
-			replaseRet = ReplaceRcVersion<char>(rev, argv[2]);
-			break;
+			case 932:
+				replaseRet = ReplaceRcVersion<char>(rev, argv[2]);
+				break;
 
-		default:
-			return (int)ErrCode::UnknownCodePage;
-			break;
+			default:
+				return (int)ErrCode::UnknownCodePage;
+				break;
+			}
 		}
+		else if (fileType == "header") {
+			switch (codePage) {
+			case 1200:
+				replaseRet = ReplaceHeaderVersion<char16_t>(rev, argv[2]);
+				break;
+
+			case 932:
+				replaseRet = ReplaceHeaderVersion<char>(rev, argv[2]);
+				break;
+
+			default:
+				return (int)ErrCode::UnknownCodePage;
+				break;
+			}
+		}
+
 		if (replaseRet == ErrCode::SameRevision) {
 			cout << argv[0] << ": warning: Same revision. Skip revision versioning." << endl;
 			return 0;
