@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 /**
-	@version 0.0.0.46000
+	@version 0.0.0.5117
 */
 
 #ifndef _AUTO_REV_VERSIONING_H
@@ -116,27 +116,30 @@ template<class CharT> ErrCode ReplaceRcVersion(const int rev, const char* rcFile
 
 		while (rcStream.good()) {
 			getline(rcStream, line);
-			if (rcStream.good()) {
-				temp = line;
-				DeleteSpace<CharT>(temp);
-				if ((pos_FILEVERSION = temp.find(keyFILE)) == 0) {
-					ret = ProcFILEVERSION(line, fileVer);
-					if (ret != ErrCode::OK) throw ret;
-				}
-				else if ((pos_FILEVERSION = temp.find(keyPROD)) == 0) {
-					ret = ProcPRODUCTVERSION(line, prodVer);
-					if (ret != ErrCode::OK) throw ret;
+			temp = line;
+			DeleteSpace<CharT>(temp);
+			if ((pos_FILEVERSION = temp.find(keyFILE)) == 0) {
+				ret = ProcFILEVERSION(line, fileVer);
+				if (ret != ErrCode::OK) throw ret;
+			}
+			else if ((pos_FILEVERSION = temp.find(keyPROD)) == 0) {
+				ret = ProcPRODUCTVERSION(line, prodVer);
+				if (ret != ErrCode::OK) throw ret;
 
-				}
-				else if ((pos_FILEVERSION = temp.find(keyVFILE)) == 0) {
-					ret = ProcVFILEVERSION(line, fileVer);
-					if (ret != ErrCode::OK) throw ret;
-				}
-				else if ((pos_FILEVERSION = temp.find(keyVPROD)) == 0) {
-					ret = ProcVPRODUCTVERSION(line, prodVer);
-					if (ret != ErrCode::OK) throw ret;
-				}
-				if (tempRcStream << line << lf;
+			}
+			else if ((pos_FILEVERSION = temp.find(keyVFILE)) == 0) {
+				ret = ProcVFILEVERSION(line, fileVer);
+				if (ret != ErrCode::OK) throw ret;
+			}
+			else if ((pos_FILEVERSION = temp.find(keyVPROD)) == 0) {
+				ret = ProcVPRODUCTVERSION(line, prodVer);
+				if (ret != ErrCode::OK) throw ret;
+			}
+			if (rcStream.eof()) {
+				tempRcStream << line;
+			}
+			else {
+				tempRcStream << line << lf;
 			}
 		}
 	}
@@ -279,13 +282,16 @@ template<class CharT> ErrCode ReplaceHeaderVersion(const int rev, const char* he
 
 		while (headerStream.good()) {
 			getline(headerStream, line);
-			if (headerStream.good()) {
-				temp = line;
-				DeleteSpace<CharT>(temp);
-				if ((pos_version = temp.find(keyVersion)) == 0) {
-					ret = ProcHeaderVersion(line, fileVer);
-					if (ret != ErrCode::OK) throw ret;
-				}
+			temp = line;
+			DeleteSpace<CharT>(temp);
+			if ((pos_version = temp.find(keyVersion)) == 0) {
+				ret = ProcHeaderVersion(line, fileVer);
+				if (ret != ErrCode::OK) throw ret;
+			}
+			if(headerStream.eof()){
+				tempRcStream << line;
+			}
+			else {
 				tempRcStream << line << lf;
 			}
 		}
