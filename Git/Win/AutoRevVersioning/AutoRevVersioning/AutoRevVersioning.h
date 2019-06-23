@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 /**
-	@version 0.0.0.8065
+	@version 0.0.0.4380
 */
 
 #ifndef _AUTO_REV_VERSIONING_H
@@ -54,6 +54,7 @@ enum class ErrCode :int {
 	FailedReadCommit,
 	InvalidSHA1,
 	OutRangeSHA1,
+	InvalidSvnRev,
 	FailedOpenTempRcFile,
 	FailedOpenRcFile,
 	FailedGetMajorVer,

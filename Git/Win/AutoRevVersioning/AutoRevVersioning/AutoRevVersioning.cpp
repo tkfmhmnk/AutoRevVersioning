@@ -24,8 +24,10 @@ limitations under the License.
 using namespace std;
 
 static const char* gitRevFile = "AutoRevVersioning_gitrev";
+static const char* svnRevFile = "AutoRevVersioning_svnrev";
 
 int GetGitRev(const char* exePath, const char* projDir, int& rev);
+int GetSVNRev(const char* exePath, const char* projDir, int& rev);
 
 ErrCode UpdateFile(const char* file) {
 	string cmd;
@@ -56,6 +58,12 @@ int DeleteFile(const char* file) {
 int main(int argc, char* argv[], char* envp[]) {
 	if (argc != 6) {
 		cout << argv[0] << "Usage: AutoRevVersioning.exe <projectdir> <filepath> <file codepage> <filetype> <repositorytype>" << endl;
+		cout << endl;
+		cout << "file codepage:\tUNICODE(UTF16):\t1200" << endl;
+		cout << "\t\tShiftJIS:\t932" << endl;
+		cout << "filetype:\tresource file:\trc" << endl;
+		cout << "\t\theader file:\theader" << endl;
+		cout << "repositorytype:\tgit or svn" << endl;
 		return (int)ErrCode::InvalidArg;
 	}
 
@@ -91,7 +99,7 @@ int main(int argc, char* argv[], char* envp[]) {
 		ret = GetGitRev(argv[0],argv[1],rev);
 	}
 	else if ((repositoryType == "svn") || (repositoryType == "SVN")) {
-
+		ret = GetSVNRev(argv[0], argv[1], rev);
 	}
 	else {
 
@@ -231,5 +239,91 @@ int GetGitRev(const char* exePath,const char* projDir,int& rev){
 }
 
 int GetSVNRev(const char* exePath, const char* projDir, int& rev) {
+	string projectdir(projDir);
+	string cmd;
+	int cmd_ret;
+
+	cmd = "svnversion " + projectdir + " 1>" + svnRevFile;
+	cmd_ret = system(cmd.c_str());
+
+	if (cmd_ret != 0) {
+		cout << exePath << ": error: " << "ErrorCode=" << cmd_ret << " : cmd=" << cmd << endl;
+		return (int)ErrCode::FailedGetLog;
+	}
+
+	ifstream svnRevStream(svnRevFile);
+	if (!svnRevStream.is_open()) {
+		cout << exePath << ": error: " << "Failed to open " << svnRevFile << endl;
+		return (int)ErrCode::FailedOpenRevFile;
+	}
+
+	try {
+		string revLine;									//リビジョンの行の文字列
+		string revStr;									//リビジョンの文字列
+		size_t pos;
+		size_t idx;
+
+		getline(svnRevStream, revLine);
+		pos = revLine.find(":");
+		if (pos == string::npos) {
+			revStr = revLine;
+		}
+		else {
+			revStr = revLine.substr(pos + 1);
+		}
+
+		if (revStr.length() < 1) {
+			cout << exePath << ": error: " << "Invalid rev.  str=" << revLine << endl;
+			throw ErrCode::InvalidSvnRev;
+		}
+
+		if (revStr.back() == 'M') {
+			revStr.pop_back();
+			cout << exePath << ": warning: Detected modification." << endl;
+		}
+
+		try {
+			rev = stoi(revStr, &idx, 10);
+			if (idx != revStr.length()) {
+				cout << exePath << ": error: " << "Invalid rev. str=" << revLine << endl;
+				throw ErrCode::InvalidSvnRev;
+			}
+			cout << exePath << ": note: " << "Get revision(" << projDir << "): " << rev << endl;
+		}
+		catch (const invalid_argument& e) {
+			cout << exePath << ": error: " << "Invalid rev. str=" << revLine << endl;
+			cout << exePath << ": error: " << e.what() << endl;
+			throw (int)ErrCode::InvalidSvnRev;
+		}
+		catch (const out_of_range& e) {
+			cout << exePath << ": error: " << "Invalid rev. str=" << revLine << endl;
+			cout << exePath << ": error: " << e.what() << endl;
+			throw ErrCode::InvalidSvnRev;
+		}
+	}
+	catch (const ErrCode& e) {
+		svnRevStream.close();
+		DeleteFile(svnRevFile);
+		return (int)e;
+	}
+	catch (...) {
+		svnRevStream.close();
+		DeleteFile(svnRevFile);
+		cout << exePath << ": error: " << "Unknown" << endl;
+		return (int)ErrCode::Unknown;
+	}
+	svnRevStream.close();
+	if (DeleteFile(svnRevFile) != 0) {
+		cout << exePath << ": error: " << "Failed to delete temporary file." << endl;
+		return (int)ErrCode::FailedDeleteRevFile;
+	}
+
+	if (rev >= 65536) {
+		cout << exePath << ": warning: Revision is overflow." << endl;
+		while (rev >= 65536) {
+			rev = rev - 65536;
+		}
+	}
+
 	return 0;
 }
